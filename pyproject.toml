@@ -1,6 +1,6 @@
 [project]
 name = "easy-kit"
-version = "0.0.1"
+version = "0.0.4"
 authors = [
   { name="flegac", email="florent.legac@gmail.com" },
 ]
@@ -18,5 +18,8 @@ Homepage = "https://github.com/flegac/easy-kit"
 Issues = "https://github.com/flegac/easy-kit/issues"
 
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = [
+    "setuptools>=61.0",
+    "wheel"
+]
 build-backend = "setuptools.build_meta"

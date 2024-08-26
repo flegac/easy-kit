@@ -1,6 +1,4 @@
-from pathlib import Path
-
-from setuptools import setup, find_packages
+from setuptools import setup
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -17,7 +15,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    packages=find_packages(),
+    packages=['easy_kit'],
     # install_requires=[line for line in open('requirements.txt')],
     python_requires=">=3.7",
     include_package_data=True

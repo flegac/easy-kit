@@ -7,7 +7,8 @@ Collection of tools with no external dependencies.
 
 ## Requirements
 
-python >3.7
+- python >3.7
+- (optional) tabulate
 
 ## Usage
 
