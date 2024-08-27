@@ -5,7 +5,6 @@ from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from functools import wraps
-from pprint import pprint
 from typing import Callable
 from unittest import TestCase
 
@@ -93,6 +92,11 @@ class Timings:
         self.active = False
         self.logs = False
         self.logger = DefaultLogger
+        try:
+            from loguru import logger
+            self.logger = logger
+        except:
+            pass
 
     @contextmanager
     def timing(self, name: str = None):

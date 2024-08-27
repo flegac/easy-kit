@@ -1,25 +1,23 @@
-[project]
+[tool.poetry]
 name = "easy-kit"
-version = "0.0.4"
-authors = [
-  { name="flegac", email="florent.legac@gmail.com" },
-]
+version = "0.1.0.dev0"
 description = "Python toolkit"
+authors = ["flegac <florent.legac@gmail.com>"]
+license = "MIT"
 readme = "README.md"
-requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+repository = "https://github.com/flegac/easy-kit"
 
-[project.urls]
-Homepage = "https://github.com/flegac/easy-kit"
-Issues = "https://github.com/flegac/easy-kit/issues"
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.extras]
+logger = ["loguru", "tabulate"]
 
 [build-system]
-requires = [
-    "setuptools>=61.0",
-    "wheel"
-]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

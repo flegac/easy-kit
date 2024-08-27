@@ -7,8 +7,9 @@ Collection of tools with no external dependencies.
 
 ## Requirements
 
-- python >3.7
-- (optional) tabulate
+- python 3.x
+
+Cf. [pyproject.toml](./pyproject.toml)
 
 ## Usage
 
