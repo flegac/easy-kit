@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "easy-kit"
-version = "0.1.1"
+version = "0.1.2a0"
 description = "Python toolkit"
 authors = ["flegac <florent.legac@gmail.com>"]
 license = "MIT"
