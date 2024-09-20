@@ -1,6 +1,5 @@
 import inspect
 import math
-import statistics
 import sys
 import time
 from collections import defaultdict
@@ -10,7 +9,9 @@ from functools import wraps
 from typing import Callable
 from unittest import TestCase
 
-HEADERS = ['label', 'total (s)', 'count', 'min', 'max', 'mean', 'std']
+HEADERS = ['label', 'total (s)', 'time (%)', 'count', 'min', 'max', 'mean', 'std']
+TOTAL_TIME = '__total_time__'
+NOT_MEASURED = '__not-measured__'
 
 
 def _tabulate(headers: list[str], data: list[list[str]]):
@@ -24,10 +25,15 @@ def _tabulate(headers: list[str], data: list[list[str]]):
     except:
         pass
 
+    def _format(val: str | float):
+        if isinstance(val, float | int):
+            return f'{val:.5f}'
+        return val
+
     raw = [
         headers,
         *[
-            [f'{_:5}' for _ in row]
+            list(map(_format, row))
             for row in data
         ]
     ]
@@ -40,7 +46,7 @@ def _tabulate(headers: list[str], data: list[list[str]]):
     raw.insert(1, ['-' * _ for _ in lengths])
 
     return '\n'.join([
-        '   '.join([_.ljust(l) for _, l in zip(row, lengths)])
+        '   '.join([_.rjust(l) for _, l in zip(row, lengths)])
         for row in raw
     ])
 
@@ -52,6 +58,8 @@ class TimeEntry:
     values: dict[str, float] = field(default_factory=dict)
 
     def compress(self):
+        if not self.events:
+            return
         self.values = {
             'sum': self.values.get('sum', 0) + sum(self.events),
             'square_sum': self.values.get('square_sum', 0) + sum([_ * _ for _ in self.events]),
@@ -61,26 +69,42 @@ class TimeEntry:
         }
         self.events = []
 
-    def raw_line(self, key: str):
+    def raw_line(self, key: str, total_time: float):
         self.compress()
         return [
-            key, self.values['sum'], self.values['count'],
-            self.values['min'], self.values['max'],
-            self.mean, self.std
+            key,
+            self.values['sum'],
+            100 * self.values['sum'] / total_time,
+            self.values['count'],
+            self.values['min'],
+            self.values['max'],
+            self.mean,
+            self.std
         ]
+
+    @property
+    def total(self):
+        self.compress()
+        return self.values['sum']
+
+    @property
+    def count(self):
+        self.compress()
+        return self.values['count']
 
     @property
     def mean(self):
         self.compress()
-        return self.values['sum'] / max(1, self.values['count'])
+        return self.values['sum'] / max(1., self.count)
 
     @property
     def std(self):
-
         self.compress()
         s1 = self.values['sum']
         s2 = self.values['square_sum']
         n = self.values['count']
+        if n == 0:
+            return 0.
         res = math.sqrt(s2 / n - (s1 / n) ** 2)
         return res
 
@@ -103,6 +127,7 @@ class Timings:
         self.active = False
         self.logs = False
         self.logger = DefaultLogger
+        self.start_time: float = None
         try:
             from loguru import logger
             self.logger = logger
@@ -128,17 +153,23 @@ class Timings:
     def show_timing(self):
         if not self.active:
             return
-
         try:
             self.logger.info('\n' + self.format_table())
         except Exception as e:
             self.logger.warning(f'Warning: {e}')
 
     def raw_table(self):
-        return sorted([
-            entry.raw_line(key)
-            for key, entry in self.db.items()
-        ], key=lambda row: row[1], reverse=True)
+        total_time = time.time() - self.start_time
+
+        return list(sorted([
+            [
+                TOTAL_TIME, total_time, 100, 1, total_time, total_time, total_time, 0.
+            ],
+            *[
+                entry.raw_line(key, total_time)
+                for key, entry in self.db.items()
+            ]
+        ], key=lambda row: row[1], reverse=True))
 
     def format_table(self):
         return _tabulate(headers=HEADERS, data=self.raw_table())
@@ -146,6 +177,7 @@ class Timings:
     def setup_timing(self, status: bool = True, logs: bool = False):
         self.active = status
         self.logs = logs
+        self.start_time = time.time()
 
     def tree_structure(self):
         groups = {}
