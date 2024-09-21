@@ -161,7 +161,7 @@ class Timings:
     def raw_table(self):
         total_time = time.time() - self.start_time
 
-        return list(sorted([
+        entries = [
             [
                 TOTAL_TIME, total_time, 100, 1, total_time, total_time, total_time, 0.
             ],
@@ -169,7 +169,11 @@ class Timings:
                 entry.raw_line(key, total_time)
                 for key, entry in self.db.items()
             ]
-        ], key=lambda row: row[1], reverse=True))
+        ]
+        sorted_entries = sorted(entries, key=lambda row: row[1], reverse=True)
+        final_entries = list(filter(lambda x: x[2] > 1e-3, sorted_entries))
+
+        return final_entries
 
     def format_table(self):
         return _tabulate(headers=HEADERS, data=self.raw_table())
