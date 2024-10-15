@@ -1,6 +1,5 @@
 import inspect
 import math
-import sys
 import time
 from collections import defaultdict
 from contextlib import contextmanager
@@ -9,25 +8,24 @@ from functools import wraps
 from typing import Callable
 from unittest import TestCase
 
-HEADERS = ['label', 'total (s)', 'time (%)', 'count', 'min', 'max', 'mean', 'std']
+from easy_kit.measure import MEASURES, COLUMNS
+
+HEADERS = [
+    'label', 'total (s)', 'time (%)', 'count', 'min', 'max', 'mean', 'std',
+    'frequency (#/sec)',
+    'rate/sec (1. / min)'
+
+]
 TOTAL_TIME = '__total_time__'
 NOT_MEASURED = '__not-measured__'
 
 
-def _tabulate(headers: list[str], data: list[list[str]]):
-    try:
-        from tabulate import tabulate
-        return tabulate(
-            headers=headers,
-            floatfmt='.5f',
-            tabular_data=data,
-        )
-    except:
-        pass
-
+def _tabulate(headers: list[str], data: list[list[int | float | str]]):
     def _format(val: str | float):
-        if isinstance(val, float | int):
+        if isinstance(val, float):
             return f'{val:.5f}'
+        if isinstance(val, int):
+            return f'{val}'
         return val
 
     raw = [
@@ -55,18 +53,16 @@ def _tabulate(headers: list[str], data: list[list[str]]):
 class TimeEntry:
     events: list[float] = field(default_factory=list)
     processed: int = 0
-    values: dict[str, float] = field(default_factory=dict)
+    values: dict[str, float | int] = field(default_factory=dict)
 
     def compress(self):
         if not self.events:
             return
         self.values = {
-            'sum': self.values.get('sum', 0) + sum(self.events),
-            'square_sum': self.values.get('square_sum', 0) + sum([_ * _ for _ in self.events]),
-            'count': self.values.get('count', 0) + len(self.events),
-            'min': min([self.values.get('min', sys.float_info.max), *self.events]),
-            'max': max([self.values.get('max', sys.float_info.min), *self.events]),
+            name: reducer.reduce(self.processed, self.values.get(name, None), self.events)
+            for name, reducer in MEASURES.items()
         }
+        self.processed += len(self.events)
         self.events = []
 
     def raw_line(self, key: str, total_time: float):
@@ -78,24 +74,11 @@ class TimeEntry:
             self.values['count'],
             self.values['min'],
             self.values['max'],
-            self.mean,
-            self.std
+            self.values['mean'],
+            self.std,
+            self.values['count'] / total_time,
+            1. / self.values['mean'],
         ]
-
-    @property
-    def total(self):
-        self.compress()
-        return self.values['sum']
-
-    @property
-    def count(self):
-        self.compress()
-        return self.values['count']
-
-    @property
-    def mean(self):
-        self.compress()
-        return self.values['sum'] / max(1., self.count)
 
     @property
     def std(self):
@@ -161,9 +144,20 @@ class Timings:
     def raw_table(self):
         total_time = time.time() - self.start_time
 
+        #TODO
+        # columns = {
+        #     name: measure.format_column(self.db)
+        #     for name, measure in COLUMNS.items()
+        # }
+        # entries = [
+        #     [v[i] for k, v in columns.items()]
+        #     for i in range(len(columns['name']))
+        # ]
+
         entries = [
             [
-                TOTAL_TIME, total_time, 100, 1, total_time, total_time, total_time, 0.
+                TOTAL_TIME, total_time, 100, 1,
+                *[.0] * 6
             ],
             *[
                 entry.raw_line(key, total_time)

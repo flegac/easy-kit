@@ -2,7 +2,7 @@ from typing import Callable
 
 
 class Event:
-    IS_ENABLED = False
+    IS_ENABLED = True
 
     @staticmethod
     def enable(status: bool = True):
