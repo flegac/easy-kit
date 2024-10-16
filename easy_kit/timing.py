@@ -1,3 +1,4 @@
+import atexit
 import inspect
 import math
 import time
@@ -8,12 +9,12 @@ from functools import wraps
 from typing import Callable
 from unittest import TestCase
 
-from easy_kit.measure import MEASURES, COLUMNS
+from easy_kit.measure import MEASURES
 
 HEADERS = [
     'label', 'total (s)', 'time (%)', 'count', 'min', 'max', 'mean', 'std',
     'frequency (#/sec)',
-    'rate/sec (1. / min)'
+    'rate/sec (1. / mean)'
 
 ]
 TOTAL_TIME = '__total_time__'
@@ -125,6 +126,17 @@ class Timings:
         yield
         self._after(name, start)
 
+    def time_func_label(self, label: str):
+        def wrapper[** P, R](func: Callable[P, R]) -> Callable[P, R]:
+            @wraps(func)
+            def inner(*args: P.args, **kwargs: P.kwargs) -> R:
+                with self.timing(label):
+                    return func(*args, **kwargs)
+
+            return inner
+
+        return wrapper
+
     def time_func[** P, R](self, func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
         def inner(*args: P.args, **kwargs: P.kwargs) -> R:
@@ -144,7 +156,7 @@ class Timings:
     def raw_table(self):
         total_time = time.time() - self.start_time
 
-        #TODO
+        # TODO
         # columns = {
         #     name: measure.format_column(self.db)
         #     for name, measure in COLUMNS.items()
@@ -166,16 +178,21 @@ class Timings:
         ]
         sorted_entries = sorted(entries, key=lambda row: row[1], reverse=True)
         final_entries = list(filter(lambda x: x[2] > 1e-3, sorted_entries))
-
+        final_entries=sorted_entries
         return final_entries
 
     def format_table(self):
         return _tabulate(headers=HEADERS, data=self.raw_table())
 
-    def setup_timing(self, status: bool = True, logs: bool = False):
+    def setup_timing(self, status: bool = True, logs: bool = False, show_at_exit: bool = True):
+        if show_at_exit:
+            atexit.register(show_timing)
+
         self.active = status
         self.logs = logs
         self.start_time = time.time()
+
+        return time_func
 
     def tree_structure(self):
         groups = {}
@@ -210,6 +227,7 @@ class Timings:
 _TIMING = Timings()
 timing = _TIMING.timing
 time_func = _TIMING.time_func
+time_func_label = _TIMING.time_func_label
 show_timing = _TIMING.show_timing
 setup_timing = _TIMING.setup_timing
 
@@ -218,7 +236,3 @@ class TimingTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         setup_timing()
-
-    @classmethod
-    def tearDownClass(cls):
-        show_timing()
