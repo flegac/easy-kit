@@ -112,11 +112,11 @@ class Timings:
         self.logs = False
         self.logger = DefaultLogger
         self.start_time: float = None
-        try:
-            from loguru import logger
-            self.logger = logger
-        except:
-            pass
+        # try:
+        #     from loguru import logger
+        #     self.logger = logger
+        # except:
+        #     pass
 
     @contextmanager
     def timing(self, name: str = None):
@@ -178,7 +178,7 @@ class Timings:
         ]
         sorted_entries = sorted(entries, key=lambda row: row[1], reverse=True)
         final_entries = list(filter(lambda x: x[2] > 1e-3, sorted_entries))
-        final_entries=sorted_entries
+        final_entries = sorted_entries
         return final_entries
 
     def format_table(self):
