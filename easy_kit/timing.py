@@ -24,9 +24,9 @@ NOT_MEASURED = '__not-measured__'
 def _tabulate(headers: list[str], data: list[list[int | float | str]]):
     def _format(val: str | float):
         if isinstance(val, float):
-            return f'{val:.5f}'
+            return f'{val:3.2f}'
         if isinstance(val, int):
-            return f'{val}'
+            return f'{val: 7d}'
         return val
 
     raw = [
@@ -45,7 +45,7 @@ def _tabulate(headers: list[str], data: list[list[int | float | str]]):
     raw.insert(1, ['-' * _ for _ in lengths])
 
     return '\n'.join([
-        '   '.join([_.rjust(l) for _, l in zip(row, lengths)])
+        '   '.join([_.ljust(l) for _, l in zip(row, lengths)])
         for row in raw
     ])
 
@@ -168,7 +168,7 @@ class Timings:
 
         entries = [
             [
-                TOTAL_TIME, total_time, 100, 1,
+                TOTAL_TIME, total_time, 100., 1,
                 *[.0] * 6
             ],
             *[
