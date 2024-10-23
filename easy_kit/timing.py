@@ -2,6 +2,7 @@ import atexit
 import inspect
 import math
 import time
+import traceback
 from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -13,8 +14,9 @@ from easy_kit.measure import MEASURES
 
 HEADERS = [
     'label', 'total (s)', 'time (%)', 'count', 'min', 'max', 'mean', 'std',
-    'frequency (#/sec)',
-    'rate/sec (1. / mean)'
+    'freq (real)',
+    'freq (expect)',
+    'freq (worst)',
 
 ]
 TOTAL_TIME = '__total_time__'
@@ -23,6 +25,8 @@ NOT_MEASURED = '__not-measured__'
 
 def _tabulate(headers: list[str], data: list[list[int | float | str]]):
     def _format(val: str | float):
+        if val is None:
+            return '***'
         if isinstance(val, float):
             return f'{val:3.2f}'
         if isinstance(val, int):
@@ -79,6 +83,7 @@ class TimeEntry:
             self.std,
             self.values['count'] / total_time,
             1. / self.values['mean'],
+            1. / self.values['max'],
         ]
 
     @property
@@ -152,6 +157,7 @@ class Timings:
             self.logger.info('\n' + self.format_table())
         except Exception as e:
             self.logger.warning(f'Warning: {e}')
+            traceback.print_exception(e)
 
     def raw_table(self):
         total_time = time.time() - self.start_time
@@ -166,10 +172,12 @@ class Timings:
         #     for i in range(len(columns['name']))
         # ]
 
+        n = len(self.db.items())
+
         entries = [
             [
                 TOTAL_TIME, total_time, 100., 1,
-                *[.0] * 6
+                *[None] * (n - 4)
             ],
             *[
                 entry.raw_line(key, total_time)
