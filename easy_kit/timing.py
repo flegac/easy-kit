@@ -172,8 +172,7 @@ class Timings:
         #     for i in range(len(columns['name']))
         # ]
 
-        n = len(self.db.items())
-
+        n = len(HEADERS)
         entries = [
             [
                 TOTAL_TIME, total_time, 100., 1,
@@ -238,6 +237,10 @@ time_func = _TIMING.time_func
 time_func_label = _TIMING.time_func_label
 show_timing = _TIMING.show_timing
 setup_timing = _TIMING.setup_timing
+
+
+def get_elapsed_time():
+    return time.time() - _TIMING.start_time
 
 
 class TimingTestCase(TestCase):

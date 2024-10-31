@@ -2,9 +2,9 @@ from typing import Type, Any
 
 
 class Context:
-    def __init__(self, initial_state: list[Any] = None):
+    def __init__(self, *initial_state: Any):
         self.data: dict[Type, Any] = {}
-        for _ in initial_state or []:
+        for _ in initial_state:
             self.register(_)
 
     def register[T](self, data: T, ctype: Type[T] = None):
@@ -19,6 +19,7 @@ class Context:
         else:
             ctype = found_type
         self.data[ctype] = data
+        return self
 
     def find[T](self, ctype: Type[T]) -> T:
         return self.data[ctype]
