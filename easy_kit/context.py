@@ -7,6 +7,13 @@ class Context:
         for _ in initial_state:
             self.register(_)
 
+    def get_service[T](self, dtype: Type[T]) -> T:
+        from easy_kit.context_service import ContextService
+        assert issubclass(dtype, ContextService)
+        if dtype not in self.data:
+            self.data[dtype] = dtype(self)
+        return self.data[dtype]
+
     def register[T](self, data: T, ctype: Type[T] = None):
         found_type = type(data)
 
