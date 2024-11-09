@@ -13,3 +13,10 @@ deploy-test:
 deploy-pypi:
     poetry publish
 	twine upload --repository pypi dist/*
+
+
+full-deploy:
+    poetry version prerelease
+    poetry version patch
+	poetry build
+    poetry publish
