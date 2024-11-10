@@ -1,7 +1,4 @@
-import atexit
 import inspect
-import math
-import time
 import traceback
 from collections import defaultdict
 from contextlib import contextmanager
@@ -9,6 +6,10 @@ from dataclasses import dataclass, field
 from functools import wraps
 from typing import Callable
 from unittest import TestCase
+
+import atexit
+import math
+import time
 
 from easy_kit.measure import MEASURES
 

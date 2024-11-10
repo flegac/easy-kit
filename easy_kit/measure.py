@@ -1,6 +1,7 @@
-import sys
 from abc import abstractmethod
 from typing import override, Type
+
+import sys
 
 
 class Measure[T: float | int]:
