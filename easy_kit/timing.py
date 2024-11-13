@@ -4,7 +4,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import Callable
+from typing import Callable, TypeVar
 from unittest import TestCase
 
 import atexit
@@ -22,6 +22,9 @@ HEADERS = [
 ]
 TOTAL_TIME = '__total_time__'
 NOT_MEASURED = '__not-measured__'
+
+P = TypeVar('P')
+R = TypeVar('R')
 
 
 def _tabulate(headers: list[str], data: list[list[int | float | str]]):
@@ -145,11 +148,19 @@ class Timings:
 
     def time_func[** P, R](self, func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
-        def inner(*args: P.args, **kwargs: P.kwargs) -> R:
+        def inner(*args, **kwargs) -> R:
             with self.timing(func.__qualname__):
                 return func(*args, **kwargs)
 
         return inner
+
+    # def time_func[** P, R](self, func: Callable[P, R]) -> Callable[P, R]:
+    #     @wraps(func)
+    #     def inner(*args: P.args, **kwargs: P.kwargs) -> R:
+    #         with self.timing(func.__qualname__):
+    #             return func(*args, **kwargs)
+    # 
+    #     return inner
 
     def show_timing(self):
         if not self.active:

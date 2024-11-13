@@ -1,7 +1,9 @@
 from abc import abstractmethod
-from typing import override, Type
+from typing import override, Type, TypeVar
 
 import sys
+
+T = TypeVar('T')
 
 
 class Measure[T: float | int]:
