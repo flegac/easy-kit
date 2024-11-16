@@ -121,6 +121,9 @@ class Timings:
         self.logs = False
         self.logger = DefaultLogger
         self.start_time: float = None
+
+        self.sort_by_index: int = 1
+
         # try:
         #     from loguru import logger
         #     self.logger = logger
@@ -195,7 +198,7 @@ class Timings:
                 for key, entry in self.db.items()
             ]
         ]
-        sorted_entries = sorted(entries, key=lambda row: row[1], reverse=True)
+        sorted_entries = sorted(entries, key=lambda row: row[self.sort_by_index], reverse=True)
         final_entries = list(filter(lambda x: x[2] > 1e-3, sorted_entries))
         final_entries = sorted_entries
         return final_entries
@@ -203,10 +206,14 @@ class Timings:
     def format_table(self):
         return _tabulate(headers=HEADERS, data=self.raw_table())
 
-    def setup_timing(self, status: bool = True, logs: bool = False, show_at_exit: bool = True):
+    def select_column_sort_index(self, column_index: int):
+        assert 0 < column_index < len(HEADERS)
+        self.sort_by_index = column_index
+
+    def setup_timing(self, status: bool = True, logs: bool = False, sort_index: int = 2, show_at_exit: bool = True):
         if show_at_exit:
             atexit.register(show_timing)
-
+        self.select_column_sort_index(sort_index)
         self.active = status
         self.logs = logs
         self.start_time = time.time()
@@ -249,6 +256,7 @@ time_func = _TIMING.time_func
 time_func_label = _TIMING.time_func_label
 show_timing = _TIMING.show_timing
 setup_timing = _TIMING.setup_timing
+select_column_sort_index = _TIMING.select_column_sort_index
 
 
 def get_elapsed_time():
