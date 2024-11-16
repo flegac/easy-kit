@@ -123,6 +123,7 @@ class Timings:
         self.start_time: float = None
 
         self.sort_by_index: int = 1
+        self.sort_reverse: bool = True
 
         # try:
         #     from loguru import logger
@@ -191,15 +192,15 @@ class Timings:
         entries = [
             [
                 TOTAL_TIME, total_time, 100., 1,
-                *[None] * (n - 4)
+                *[.0] * (n - 4)
             ],
             *[
                 entry.raw_line(key, total_time)
                 for key, entry in self.db.items()
             ]
         ]
-        sorted_entries = sorted(entries, key=lambda row: row[self.sort_by_index], reverse=True)
-        final_entries = list(filter(lambda x: x[2] > 1e-3, sorted_entries))
+        sorted_entries = sorted(entries, key=lambda row: row[self.sort_by_index], reverse=self.sort_reverse)
+        # final_entries = list(filter(lambda x: x[2] > 1e-3, sorted_entries))
         final_entries = sorted_entries
         return final_entries
 
@@ -207,8 +208,9 @@ class Timings:
         return _tabulate(headers=HEADERS, data=self.raw_table())
 
     def select_column_sort_index(self, column_index: int):
-        assert 0 < column_index < len(HEADERS)
-        self.sort_by_index = column_index
+        assert abs(column_index) < len(HEADERS)
+        self.sort_reverse = column_index < 0
+        self.sort_by_index = abs(column_index)
 
     def setup_timing(self, status: bool = True, logs: bool = False, sort_index: int = 2, show_at_exit: bool = True):
         if show_at_exit:
