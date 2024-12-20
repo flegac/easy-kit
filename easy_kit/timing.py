@@ -133,11 +133,14 @@ class Timings:
 
     @contextmanager
     def timing(self, name: str = None):
-        if name is None:
-            name = inspect.stack()[11].function
-        start = self._before(name)
-        yield
-        self._after(name, start)
+        if not self.active:
+            yield
+        else:
+            if name is None:
+                name = inspect.stack()[11].function
+            start = self._before(name)
+            yield
+            self._after(name, start)
 
     def time_func_label(self, label: str):
         def wrapper[** P, R](func: Callable[P, R]) -> Callable[P, R]:
@@ -237,10 +240,11 @@ class Timings:
         return groups
 
     def _before(self, name: str):
+        if not self.active:
+            return
         if self.logs:
             self.logger.debug(f'+ {name}')
-        if self.active:
-            return time.time()
+        return time.time()
 
     def _after(self, name: str, start: float | None):
         if self.logs:
