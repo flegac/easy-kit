@@ -1,4 +1,7 @@
+import atexit
 import inspect
+import math
+import time
 import traceback
 from collections import defaultdict
 from contextlib import contextmanager
@@ -6,10 +9,6 @@ from dataclasses import dataclass, field
 from functools import wraps
 from typing import Callable, TypeVar
 from unittest import TestCase
-
-import atexit
-import math
-import time
 
 from easy_kit.measure import MEASURES
 
@@ -98,8 +97,10 @@ class TimeEntry:
         n = self.values['count']
         if n == 0:
             return 0.
-        res = math.sqrt(s2 / n - (s1 / n) ** 2)
-        return res
+        squares = s2 / n - (s1 / n) ** 2
+        if squares < 0:
+            return 0
+        return math.sqrt(squares)
 
     def _undefined(self, value: float):
         if len(self.events) <= 1:
