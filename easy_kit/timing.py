@@ -21,6 +21,7 @@ HEADERS = [
 ]
 TOTAL_TIME = '__total_time__'
 NOT_MEASURED = '__not-measured__'
+EPSILON = 1e-15
 
 P = TypeVar('P')
 R = TypeVar('R')
@@ -75,18 +76,21 @@ class TimeEntry:
 
     def raw_line(self, key: str, total_time: float):
         self.compress()
+        total_time = max(total_time, EPSILON)
+        mean_ = max(self.values['mean'], EPSILON)
+        max_ = max(self.values['max'], EPSILON)
         return [
             key,
             self.values['sum'],
             100 * self.values['sum'] / total_time,
             self.values['count'],
             self.values['min'],
-            self.values['max'],
-            self.values['mean'],
+            max_,
+            mean_,
             self.std,
             self.values['count'] / total_time,
-            1. / self.values['mean'],
-            1. / self.values['max'],
+            1. / mean_,
+            1. / max_,
         ]
 
     @property
@@ -144,7 +148,7 @@ class Timings:
             self._after(name, start)
 
     def time_func_label(self, label: str):
-        def wrapper[** P, R](func: Callable[P, R]) -> Callable[P, R]:
+        def wrapper[**P, R](func: Callable[P, R]) -> Callable[P, R]:
             @wraps(func)
             def inner(*args: P.args, **kwargs: P.kwargs) -> R:
                 with self.timing(label):
@@ -154,7 +158,7 @@ class Timings:
 
         return wrapper
 
-    def time_func[** P, R](self, func: Callable[P, R]) -> Callable[P, R]:
+    def time_func[**P, R](self, func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
         def inner(*args, **kwargs) -> R:
             with self.timing(func.__qualname__):
